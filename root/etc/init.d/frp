@@ -69,23 +69,26 @@ conf_proxy_add() {
 	[ -n "$remark" ] && [ -n "$type" ] || return 1
 	
 	echo "" >>$tmpconf
-	echo "[$remark]" >>$tmpconf
-	echo "type=$type" >>$tmpconf
-	[ -n "$custom_domains" ] && echo "custom_domains=$custom_domains" >>$tmpconf
-	[ -n "$subdomain" ] && echo "subdomain=$subdomain" >>$tmpconf
-	[ -n "$remote_port" ] && echo "remote_port=$remote_port" >>$tmpconf
-	[ -z "$stcp_role" ] && [ -z "$xtcp_role" ] && [ -n "$local_ip" ] && echo "local_ip=$local_ip" >>$tmpconf
-	[ -z "$stcp_role" ] && [ -z "$xtcp_role" ] && [ -n "$local_port" ] && echo "local_port=$local_port" >>$tmpconf
+	echo "[[proxies]]" >>$tmpconf
+##	echo "[$remark]" >>$tmpconf
+  echo "name=\"$remark\""  >>$tmpconf
+	echo "type=\"$type\"" >>$tmpconf
+	[ -n "$custom_domains" ] && echo "customDomains=[\"$custom_domains\"]" >>$tmpconf
+	[ -n "$subdomain" ] && echo "subdomain=\"$subdomain\"" >>$tmpconf
+	[ -n "$remote_port" ] && echo "remotePort=$remote_port" >>$tmpconf
+	[ -z "$stcp_role" ] && [ -z "$xtcp_role" ] && [ -n "$local_ip" ] && echo "localIP=\"$local_ip\"" >>$tmpconf
+	[ -z "$stcp_role" ] && [ -z "$xtcp_role" ] && [ -n "$local_port" ] && echo "localPort=$local_port" >>$tmpconf
 	[ -n "$locations" ] && echo "locations=$locations" >>$tmpconf
 	[ -n "$http_user" -a -n "$http_pwd" ] && {
-		echo "http_user=$http_user" >>$tmpconf
-		echo "http_pwd=$http_pwd" >>$tmpconf
+		echo "httpUser=\"$http_user\"" >>$tmpconf
+		echo "httpPassword=\"$http_pwd\"" >>$tmpconf
 	}
-	[ -n "$host_header_rewrite" ] && echo "host_header_rewrite=$host_header_rewrite" >>$tmpconf
+	[ -n "$host_header_rewrite" ] && echo "hostHeaderRewrite=\"$host_header_rewrite\"" >>$tmpconf
+	# todo 下面的又需要再改
 	[ -n "$plugin" ] && echo "plugin=$plugin" >>$tmpconf
 	[ -n "$plugin_http_user" -a -n "$plugin_http_passwd" ] && {
-		echo "plugin_http_user=$plugin_http_user" >>$tmpconf
-		echo "plugin_http_passwd=$plugin_http_passwd" >>$tmpconf
+		echo "httpUser=\"$plugin_http_user\"" >>$tmpconf
+		echo "httpPassword=\"$plugin_http_passwd\"" >>$tmpconf
 	}
 	[ -n "$plugin_unix_path" ] && echo "plugin_unix_path=$plugin_unix_path" >>$tmpconf
 	
@@ -96,8 +99,8 @@ conf_proxy_add() {
 			[ -n "$local_port" ] && echo "bind_port=$local_port" >>$tmpconf
 			[ -n "$stcp_servername" ] && echo "server_name=$stcp_servername" >>$tmpconf || return 1
 		else
-			[ -n "$local_ip" ] && echo "local_ip=$local_ip" >>$tmpconf
-			[ -n "$local_port" ] && echo "local_port=$local_port" >>$tmpconf
+			[ -n "$local_ip" ] && echo "localIP=\"$local_ip\"">>$tmpconf
+			[ -n "$local_port" ] && echo "localPort=$local_port" >>$tmpconf
 		fi
 		[ -n "$stcp_secretkey" ] && echo "sk=$stcp_secretkey" >>$tmpconf || return 1
 	}
@@ -109,8 +112,8 @@ conf_proxy_add() {
 			[ -n "$local_port" ] && echo "bind_port=$local_port" >>$tmpconf
 			[ -n "$xtcp_servername" ] && echo "server_name=$xtcp_servername" >>$tmpconf || return 1
 		else
-			[ -n "$local_ip" ] && echo "local_ip=$local_ip" >>$tmpconf
-			[ -n "$local_port" ] && echo "local_port=$local_port" >>$tmpconf
+			[ -n "$local_ip" ] && echo "localIP=\"$local_ip\"">>$tmpconf
+			[ -n "$local_port" ] && echo "localPort=$local_port" >>$tmpconf
 		fi
 		[ -n "$xtcp_secretkey" ] && echo "sk=$xtcp_secretkey" >>$tmpconf || return 1
 	}
@@ -130,8 +133,8 @@ conf_proxy_add() {
 	[ -n "$plugin_host_header_rewrite" ] && echo "plugin_host_header_rewrite=$plugin_host_header_rewrite" >>$tmpconf
 	[ -n "$plugin_header_X_From_Where" ] && echo "plugin_header_X_From_Where=$plugin_header_X_From_Where" >>$tmpconf	
 
-	frp_write_bool use_encryption $cfg 1
-	frp_write_bool use_compression $cfg 1
+	frp_write_bool transport.useEncryption $cfg 1
+	frp_write_bool transport.useCompression $cfg 1
 	
 	config_list_foreach "$cfg" extra_params add_rule_extra_param $tmpconf
 
@@ -233,26 +236,25 @@ start() {
 	
 	local tmpconf="/var/etc/frp/frpc.ini"
 
-	echo "[common]" >$tmpconf
-	echo "server_addr=${server_addr}" >>$tmpconf
-	echo "server_port=${server_port}" >>$tmpconf
-	echo "token=${token}" >>$tmpconf
-	[ -n "$user" ] && echo "user=$user" >>$tmpconf
-	echo "log_level=${log_level}" >>$tmpconf
-	echo "log_max_days=${log_max_days}" >>$tmpconf
-	echo "protocol=${protocol}" >>$tmpconf
-	echo "log_file=$LOGFILE" >>$tmpconf
-	[ -n "$http_proxy" ] && echo "http_proxy=$http_proxy" >>$tmpconf
-	[ -n "$pool_count" ] && echo "pool_count=$pool_count" >>$tmpconf
-	[ -n "$admin_port" ] && echo "admin_addr=0.0.0.0" >>$tmpconf && echo "admin_port=$admin_port" >>$tmpconf
-	[ -n "$admin_user" ] && echo "admin_user=$admin_user" >>$tmpconf
-	[ -n "$admin_pwd" ] && echo "admin_pwd=$admin_pwd" >>$tmpconf
+	echo "serverAddr=\"${server_addr}\"" >$tmpconf
+	echo "serverPort=${server_port}" >>$tmpconf
+	echo "auth.token=\"${token}\"" >>$tmpconf
+	[ -n "$user" ] && echo "user=\"$user\"" >>$tmpconf
+	echo "log.level=\"${log_level}\"" >>$tmpconf
+	echo "log.maxDays=${log_max_days}" >>$tmpconf
+	echo "transport.protocol=\"${protocol}\"" >>$tmpconf
+	echo "log.to=\"$LOGFILE\"" >>$tmpconf
+	[ -n "$http_proxy" ] && echo "transport.proxyURL=\"$http_proxy\"" >>$tmpconf
+	[ -n "$pool_count" ] && echo "transport.poolCount=$pool_count" >>$tmpconf
+	[ -n "$admin_port" ] && echo "webServer.addr=\"0.0.0.0\"" >>$tmpconf && echo "webServer.port=$admin_port" >>$tmpconf
+	[ -n "$admin_user" ] && echo "webServer.user=\"$admin_user\"" >>$tmpconf
+	[ -n "$admin_pwd" ] && echo "webServer.password=\"$admin_pwd\"" >>$tmpconf
 	config_list_foreach common extra_params add_rule_extra_param $tmpconf
 
 	config_load "frp"
-	frp_write_bool tcp_mux common 1
-	frp_write_bool tls_enable common 0
-	frp_write_bool login_fail_exit common 1
+	frp_write_bool transport.tcpMux common 1
+	frp_write_bool transport.tls.enable common 0
+	frp_write_bool loginFailExit  common 1
 	config_foreach conf_proxy_add proxy "$tmpconf"
 
 	[ "$(cat "$tmpconf" | grep -c "type=")" -gt 0 ] || (echo_date "frp服务启动失败，请首先添加服务列表！" && exit 0)
